@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { PlansModule } from './plans/plans.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { InvoicesModule } from './invoices/invoices.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     PlansModule,
     TenantsModule,
     SubscriptionsModule,
+    InvoicesModule,
   ],
 
   controllers: [AppController],
