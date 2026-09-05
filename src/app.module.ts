@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bullmq';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,6 +13,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -59,10 +61,23 @@ import { APP_GUARD } from '@nestjs/core';
       },
     ]),
 
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+        },
+      }),
+    }),
+
     PlansModule,
     TenantsModule,
     SubscriptionsModule,
     InvoicesModule,
+    PaymentsModule,
   ],
 
   controllers: [AppController],
