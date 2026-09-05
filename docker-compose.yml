@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: subscription-billing-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: billing_user
+      POSTGRES_PASSWORD: billing_password
+      POSTGRES_DB: subscription_billing
+
+    ports:
+      - '5432:5432'
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
