@@ -26,6 +26,33 @@ services:
     volumes:
       - redis_data:/data
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: subscription-billing-api
+    restart: unless-stopped
+
+    environment:
+      PORT: 3000
+
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: billing_user
+      DATABASE_PASSWORD: billing_password
+      DATABASE_NAME: subscription_billing
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    ports:
+      - '3000:3000'
+
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   postgres_data:
   redis_data:
