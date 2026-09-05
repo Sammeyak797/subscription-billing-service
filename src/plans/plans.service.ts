@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -10,16 +11,31 @@ export class PlansService {
   constructor(
     @InjectRepository(Plan)
     private readonly planRepository: Repository<Plan>,
+
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async create(createPlanDto: CreatePlanDto): Promise<Plan> {
     const plan = this.planRepository.create(createPlanDto);
 
-    return this.planRepository.save(plan);
+    const savedPlan = await this.planRepository.save(plan);
+
+    await this.cacheManager.del('plans:active');
+
+    return savedPlan;
   }
 
   async findAll(): Promise<Plan[]> {
-    return this.planRepository.find({
+    const cacheKey = 'plans:active';
+
+    const cachedPlans = await this.cacheManager.get<Plan[]>(cacheKey);
+
+    if (cachedPlans) {
+      return cachedPlans;
+    }
+
+    const plans = await this.planRepository.find({
       where: {
         active: true,
       },
@@ -27,6 +43,10 @@ export class PlansService {
         createdAt: 'DESC',
       },
     });
+
+    await this.cacheManager.set(cacheKey, plans, 60000);
+
+    return plans;
   }
 
   async count(): Promise<number> {
