@@ -112,4 +112,73 @@ export class SubscriptionsService {
 
     return this.subscriptionRepository.save(subscription);
   }
+
+  async changePlan(subscriptionId: string, newPlanId: string) {
+    const subscription = await this.subscriptionRepository.findOne({
+      where: {
+        id: subscriptionId,
+        status: SubscriptionStatus.ACTIVE,
+      },
+      relations: {
+        plan: true,
+        tenant: true,
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('Active subscription not found');
+    }
+
+    const newPlan = await this.planRepository.findOne({
+      where: {
+        id: newPlanId,
+        active: true,
+      },
+    });
+
+    if (!newPlan) {
+      throw new NotFoundException('New plan not found');
+    }
+
+    if (subscription.planId === newPlan.id) {
+      throw new BadRequestException('Subscription is already on this plan');
+    }
+
+    const now = new Date();
+
+    const totalMilliseconds =
+      subscription.endDate.getTime() - subscription.startDate.getTime();
+
+    const remainingMilliseconds = Math.max(
+      subscription.endDate.getTime() - now.getTime(),
+      0,
+    );
+
+    const remainingRatio =
+      totalMilliseconds > 0 ? remainingMilliseconds / totalMilliseconds : 0;
+
+    const oldPlanRemaining = Math.round(
+      subscription.plan.price * remainingRatio * 100,
+    );
+
+    const newPlanRemaining = Math.round(newPlan.price * remainingRatio * 100);
+
+    const proratedAmount = Math.max(newPlanRemaining - oldPlanRemaining, 0);
+
+    const oldPlanId = subscription.planId;
+
+    subscription.planId = newPlan.id;
+
+    await this.subscriptionRepository.save(subscription);
+
+    return {
+      subscriptionId: subscription.id,
+      oldPlanId,
+      newPlanId: newPlan.id,
+      currency: newPlan.currency,
+      proratedAmountPaise: proratedAmount,
+      proratedAmount: proratedAmount / 100,
+      remainingRatio,
+    };
+  }
 }

@@ -47,8 +47,8 @@ export class Subscription {
   @Column({ type: 'timestamp' })
   startDate: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  endDate: Date | null;
+  @Column({ type: 'timestamp' })
+  endDate: Date;
 
   @CreateDateColumn()
   createdAt: Date;
