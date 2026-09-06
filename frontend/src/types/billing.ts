@@ -47,3 +47,11 @@ export interface Invoice {
   periodEnd: string;
   createdAt: string;
 }
+
+export interface Customer {
+  id: string;
+  name: string;
+  plan: string;
+  subscriptionStatus: SubscriptionStatus;
+  mrr: number;
+}
